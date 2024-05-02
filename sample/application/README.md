@@ -6,6 +6,7 @@ This is a simple ping pong service built using Go and gRPC.
 
 ## Build Images and deploy the application
 
+- `go build -ldflags="-s -w" -o ping-pong ./cmd/...`
 - `sudo ./scripts/build_images.sh -u username -t latest`
 - `kubectl apply -f ping-pong-app.yaml`
 
