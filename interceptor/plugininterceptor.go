@@ -4,6 +4,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"golang.org/x/net/context"
 
@@ -14,10 +15,25 @@ import (
 var currentClientChain grpc.UnaryClientInterceptor
 var currentServerChain grpc.UnaryServerInterceptor
 var highestFile string
+var pluginPrefix string
+
+func init() {
+	go func() {
+		for {
+			if pluginPrefix != "" {
+				updateChains(pluginPrefix)
+			}
+			time.Sleep(1000 * time.Millisecond)
+		}
+	}()
+}
 
 func ClientInterceptor(pluginPrefixPath string) grpc.UnaryClientInterceptor {
 	return func(ctx context.Context, method string, req, reply interface{}, cc *grpc.ClientConn, invoker grpc.UnaryInvoker, opts ...grpc.CallOption) error {
-		updateChains(pluginPrefixPath)
+		if pluginPrefix == "" {
+			updateChains(pluginPrefixPath)
+		}
+		pluginPrefix = pluginPrefixPath
 
 		if currentClientChain == nil {
 			return invoker(ctx, method, req, reply, cc, opts...)
@@ -29,7 +45,10 @@ func ClientInterceptor(pluginPrefixPath string) grpc.UnaryClientInterceptor {
 
 func ServerInterceptor(pluginPrefixPath string) grpc.UnaryServerInterceptor {
 	return func(ctx context.Context, req any, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (any, error) {
-		updateChains(pluginPrefixPath)
+		if pluginPrefix == "" {
+			updateChains(pluginPrefixPath)
+		}
+		pluginPrefix = pluginPrefixPath
 
 		if currentServerChain == nil {
 			return handler(ctx, req)
