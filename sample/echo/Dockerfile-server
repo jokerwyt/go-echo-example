@@ -1,0 +1,6 @@
+FROM alpine:latest
+RUN apk add gcompat
+# Copy the built binary from the builder stage
+COPY ./echo/server /server
+# Set the entrypoint command to run the binary
+CMD ["/server"]
