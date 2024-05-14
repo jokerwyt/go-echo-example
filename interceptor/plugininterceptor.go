@@ -30,9 +30,9 @@ func init() {
 
 func ClientInterceptor(pluginPrefixPath string) grpc.UnaryClientInterceptor {
 	return func(ctx context.Context, method string, req, reply interface{}, cc *grpc.ClientConn, invoker grpc.UnaryInvoker, opts ...grpc.CallOption) error {
-		if pluginPrefix == "" {
-			updateChains(pluginPrefixPath)
-		}
+		// if pluginPrefix == "" {
+		// 	updateChains(pluginPrefixPath)
+		// }
 		pluginPrefix = pluginPrefixPath
 
 		if currentClientChain == nil {
@@ -45,9 +45,9 @@ func ClientInterceptor(pluginPrefixPath string) grpc.UnaryClientInterceptor {
 
 func ServerInterceptor(pluginPrefixPath string) grpc.UnaryServerInterceptor {
 	return func(ctx context.Context, req any, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (any, error) {
-		if pluginPrefix == "" {
-			updateChains(pluginPrefixPath)
-		}
+		// if pluginPrefix == "" {
+		// 	updateChains(pluginPrefixPath)
+		// }
 		pluginPrefix = pluginPrefixPath
 
 		if currentServerChain == nil {
