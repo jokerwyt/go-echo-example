@@ -21,7 +21,7 @@ func handler(writer http.ResponseWriter, request *http.Request) {
 	var conn *grpc.ClientConn
 
 	conn, err := grpc.Dial(
-		"echo-server:9000",
+		"server:9000",
 		grpc.WithUnaryInterceptor(interceptor.ClientInterceptor("/interceptors/frontend")),
 		grpc.WithInsecure(),
 	)

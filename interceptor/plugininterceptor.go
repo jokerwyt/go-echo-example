@@ -1,8 +1,10 @@
 package plugininterceptor
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
+	"plugin"
 	"strings"
 	"time"
 
@@ -16,6 +18,13 @@ var currentClientChain grpc.UnaryClientInterceptor
 var currentServerChain grpc.UnaryServerInterceptor
 var highestFile string
 var pluginPrefix string
+var pluginInterface interceptInit
+
+type interceptInit interface {
+	ClientInterceptor() grpc.UnaryClientInterceptor
+	ServerInterceptor() grpc.UnaryServerInterceptor
+	Kill() // call to disable weak synchronization goroutine in plugin
+}
 
 func init() {
 	go func() {
@@ -29,12 +38,8 @@ func init() {
 }
 
 func ClientInterceptor(pluginPrefixPath string) grpc.UnaryClientInterceptor {
+	pluginPrefix = pluginPrefixPath
 	return func(ctx context.Context, method string, req, reply interface{}, cc *grpc.ClientConn, invoker grpc.UnaryInvoker, opts ...grpc.CallOption) error {
-		// if pluginPrefix == "" {
-		// 	updateChains(pluginPrefixPath)
-		// }
-		pluginPrefix = pluginPrefixPath
-
 		if currentClientChain == nil {
 			return invoker(ctx, method, req, reply, cc, opts...)
 		}
@@ -44,12 +49,8 @@ func ClientInterceptor(pluginPrefixPath string) grpc.UnaryClientInterceptor {
 }
 
 func ServerInterceptor(pluginPrefixPath string) grpc.UnaryServerInterceptor {
+	pluginPrefix = pluginPrefixPath
 	return func(ctx context.Context, req any, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (any, error) {
-		// if pluginPrefix == "" {
-		// 	updateChains(pluginPrefixPath)
-		// }
-		pluginPrefix = pluginPrefixPath
-
 		if currentServerChain == nil {
 			return handler(ctx, req)
 		}
@@ -74,8 +75,33 @@ func updateChains(prefix string) {
 
 	if highestSeen != "" && highestSeen != highestFile {
 		highestFile = highestSeen
-		interceptInit := loadInterceptors(dir + highestFile)
-		currentClientChain = interceptInit.ClientInterceptor()
-		currentServerChain = interceptInit.ServerInterceptor()
+		intercept := loadInterceptors(dir + highestFile)
+		if pluginInterface != nil {
+			pluginInterface.Kill()
+		}
+		pluginInterface = intercept
+		currentClientChain = intercept.ClientInterceptor()
+		currentServerChain = intercept.ServerInterceptor()
 	}
+}
+
+func loadInterceptors(interceptorPluginPath string) interceptInit {
+	// TODO: return err instead of panicking
+	interceptorPlugin, err := plugin.Open(interceptorPluginPath)
+	if err != nil {
+		fmt.Printf("loading error: %v\n", err)
+		panic("error loading interceptor plugin so")
+	}
+
+	symInterceptInit, err := interceptorPlugin.Lookup("InterceptInit")
+	if err != nil {
+		panic("error locating interceptor in plugin so")
+	}
+
+	interceptInit, ok := symInterceptInit.(interceptInit)
+	if !ok {
+		panic("error casting interceptInit")
+	}
+
+	return interceptInit
 }
