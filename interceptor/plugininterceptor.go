@@ -2,15 +2,18 @@ package plugininterceptor
 
 import (
 	"fmt"
+	"math/rand"
 	"os"
 	"path/filepath"
 	"plugin"
+	"strconv"
 	"strings"
 	"time"
 
 	"golang.org/x/net/context"
 
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/metadata"
 )
 
 // TODO(nikolabo): synchronize access to these?
@@ -40,6 +43,10 @@ func init() {
 func ClientInterceptor(pluginPrefixPath string) grpc.UnaryClientInterceptor {
 	pluginPrefix = pluginPrefixPath
 	return func(ctx context.Context, method string, req, reply interface{}, cc *grpc.ClientConn, invoker grpc.UnaryInvoker, opts ...grpc.CallOption) error {
+		// Add unique id to rpcs
+		rpc_id := rand.Uint32()
+		ctx = metadata.AppendToOutgoingContext(ctx, "appnet-rpc-id", strconv.FormatUint(uint64(rpc_id), 10))
+
 		if currentClientChain == nil {
 			return invoker(ctx, method, req, reply, cc, opts...)
 		}
