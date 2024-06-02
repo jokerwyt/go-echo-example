@@ -21,7 +21,7 @@ func handler(writer http.ResponseWriter, request *http.Request) {
 	var conn *grpc.ClientConn
 
 	conn, err := grpc.Dial(
-		"server.server.svc.cluster.local:9000",
+		"server.default.svc.cluster.local:9000",
 		grpc.WithUnaryInterceptor(interceptor.ClientInterceptor("/interceptors/frontend")),
 		grpc.WithInsecure(),
 	)
