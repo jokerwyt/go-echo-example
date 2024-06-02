@@ -18,7 +18,7 @@ type server struct {
 }
 
 func (s *server) Echo(ctx context.Context, x *echo.Msg) (*echo.Msg, error) {
-	log.Printf("got: [%s]", x.GetBody())
+	log.Printf("Server got: [%s]", x.GetBody())
 
 	hostname, _ := os.Hostname()
 	appendedBody := fmt.Sprintf("You've hit %s\n", hostname)

@@ -16,12 +16,12 @@ import (
 func handler(writer http.ResponseWriter, request *http.Request) {
 	// requestBody := strings.Replace(request.URL.String(), "/", "", -1)
 	requestBody := request.URL.Query().Get("key")
-	fmt.Printf("Got request with key: %s\n", requestBody)
+	fmt.Printf("Frontend got request with key: %s\n", requestBody)
 
 	var conn *grpc.ClientConn
 
 	conn, err := grpc.Dial(
-		"server:9000",
+		"server.server.svc.cluster.local:9000",
 		grpc.WithUnaryInterceptor(interceptor.ClientInterceptor("/interceptors/frontend")),
 		grpc.WithInsecure(),
 	)
