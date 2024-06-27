@@ -5,6 +5,7 @@ import (
 	"log"
 	"net"
 	"os"
+	"time"
 
 	"golang.org/x/net/context"
 
@@ -19,6 +20,12 @@ type server struct {
 
 func (s *server) Echo(ctx context.Context, x *echo.Msg) (*echo.Msg, error) {
 	log.Printf("Server got: [%s]", x.GetBody())
+
+	// Check if the message contains "sleep"
+	if x.GetBody() == "sleep" {
+		log.Printf("Sleeping for 30 seconds...")
+		time.Sleep(30 * time.Second)
+	}
 
 	hostname, _ := os.Hostname()
 	appendedBody := fmt.Sprintf("You've hit %s\n", hostname)

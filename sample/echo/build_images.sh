@@ -10,17 +10,17 @@ go build -o frontend frontend.go
 
 
 # Build the frontend image
-sudo docker build --tag echo-frontend -f Dockerfile-frontend ../..
+sudo docker build --tag echo-frontend:latest -f Dockerfile-frontend ../..
 
 # Build the server image
-sudo docker build --tag echo-server -f Dockerfile-server ../..
+sudo docker build --tag echo-server:latest -f Dockerfile-server ../..
 
 # Tag the images
-sudo docker tag echo-frontend  <docker-username>/echo-frontend-grpc:namespaced
-sudo docker tag echo-server  <docker-username>/echo-server-grpc:namespaced
+sudo docker tag echo-frontend  <docker-username>/echo-frontend-grpc::latest
+sudo docker tag echo-server  <docker-username>/echo-server-grpc::latest
 
 # Push the images to the registry
-sudo docker push  <docker-username>/echo-frontend-grpc:namespaced
-sudo docker push  <docker-username>/echo-server-grpc:namespaced
+sudo docker push  <docker-username>/echo-frontend-grpc::latest
+sudo docker push  <docker-username>/echo-server-grpc::latest
 
 set +ex
