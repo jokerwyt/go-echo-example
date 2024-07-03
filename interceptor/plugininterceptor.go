@@ -2,7 +2,7 @@ package plugininterceptor
 
 import (
 	"fmt"
-	"math/rand"
+	"math/rand/v2"
 	"os"
 	"path/filepath"
 	"plugin"
@@ -46,6 +46,10 @@ func ClientInterceptor(pluginPrefixPath string) grpc.UnaryClientInterceptor {
 		// Add unique id to rpcs
 		rpc_id := rand.Uint32()
 		ctx = metadata.AppendToOutgoingContext(ctx, "appnet-rpc-id", strconv.FormatUint(uint64(rpc_id), 10))
+
+		// Add config-version header
+		configVersion := "1" // XZ: temp
+		ctx = metadata.AppendToOutgoingContext(ctx, "appnet-config-version", configVersion)
 
 		if currentClientChain == nil {
 			return invoker(ctx, method, req, reply, cc, opts...)
