@@ -2,12 +2,14 @@ package plugininterceptor
 
 import (
 	"fmt"
+	"io/ioutil"
 	"math/rand/v2"
 	"os"
 	"path/filepath"
 	"plugin"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"golang.org/x/net/context"
@@ -22,6 +24,8 @@ var currentServerChain grpc.UnaryServerInterceptor
 var highestFile string
 var pluginPrefix string
 var pluginInterface interceptInit
+var versionNumber int
+var versionNumberLock sync.RWMutex
 
 type interceptInit interface {
 	ClientInterceptor() grpc.UnaryClientInterceptor
@@ -30,6 +34,14 @@ type interceptInit interface {
 }
 
 func init() {
+	go func() {
+		filePath := "/etc/config-version"
+		for {
+			updateVersionNumberFromFile(filePath)
+			time.Sleep(1000 * time.Millisecond)
+		}
+	}()
+
 	go func() {
 		for {
 			if pluginPrefix != "" {
@@ -48,8 +60,7 @@ func ClientInterceptor(pluginPrefixPath string) grpc.UnaryClientInterceptor {
 		ctx = metadata.AppendToOutgoingContext(ctx, "appnet-rpc-id", strconv.FormatUint(uint64(rpc_id), 10))
 
 		// Add config-version header
-		configVersion := "1" // XZ: temp
-		ctx = metadata.AppendToOutgoingContext(ctx, "appnet-config-version", configVersion)
+		ctx = metadata.AppendToOutgoingContext(ctx, "appnet-config-version", strconv.Itoa(getVersionNumber()))
 
 		if currentClientChain == nil {
 			return invoker(ctx, method, req, reply, cc, opts...)
@@ -67,6 +78,35 @@ func ServerInterceptor(pluginPrefixPath string) grpc.UnaryServerInterceptor {
 		}
 
 		return currentServerChain(ctx, req, info, handler)
+	}
+}
+
+func getVersionNumber() int {
+	versionNumberLock.RLock()
+	defer versionNumberLock.RUnlock()
+	return versionNumber
+}
+
+func updateVersionNumberFromFile(filePath string) {
+	data, err := ioutil.ReadFile(filePath)
+	if err != nil {
+		fmt.Println("Error reading file:", err)
+		return
+	}
+
+	trimmedData := strings.TrimSpace(string(data))
+	newVersion, err := strconv.Atoi(trimmedData)
+	if err != nil {
+		fmt.Println("Error converting file content to int:", err)
+		return
+	}
+
+	versionNumberLock.Lock()
+	defer versionNumberLock.Unlock()
+
+	if versionNumber != newVersion {
+		// fmt.Printf("Version number updated from %d to %d\n", versionNumber, newVersion)
+		versionNumber = newVersion
 	}
 }
 
