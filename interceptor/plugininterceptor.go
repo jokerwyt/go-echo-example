@@ -111,20 +111,20 @@ func updateVersionNumberFromFile(filePath string) {
 }
 
 func updateChains(prefix string) {
-	var highestSeen string
+	var highestSeen string = highestFile
 
 	dir, prefix := filepath.Split(prefix)
 	files, _ := os.ReadDir(dir)
 
 	for _, file := range files {
 		if strings.HasPrefix(file.Name(), prefix) {
-			if file.Name() > highestFile {
+			if file.Name() > highestSeen {
 				highestSeen = file.Name()
 			}
 		}
 	}
 
-	if highestSeen != "" && highestSeen != highestFile {
+	if highestSeen != highestFile {
 		highestFile = highestSeen
 		intercept := loadInterceptors(dir + highestFile)
 		if pluginInterface != nil {
