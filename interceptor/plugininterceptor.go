@@ -53,6 +53,9 @@ func init() {
 }
 
 func ClientInterceptor(pluginPrefixPath string) grpc.UnaryClientInterceptor {
+	if pluginPrefix != pluginPrefixPath {
+		updateChains(pluginPrefixPath)
+	}
 	pluginPrefix = pluginPrefixPath
 	return func(ctx context.Context, method string, req, reply interface{}, cc *grpc.ClientConn, invoker grpc.UnaryInvoker, opts ...grpc.CallOption) error {
 		// Add unique id to rpcs
@@ -71,6 +74,9 @@ func ClientInterceptor(pluginPrefixPath string) grpc.UnaryClientInterceptor {
 }
 
 func ServerInterceptor(pluginPrefixPath string) grpc.UnaryServerInterceptor {
+	if pluginPrefix != pluginPrefixPath {
+		updateChains(pluginPrefixPath)
+	}
 	pluginPrefix = pluginPrefixPath
 	return func(ctx context.Context, req any, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (any, error) {
 		if currentServerChain == nil {
