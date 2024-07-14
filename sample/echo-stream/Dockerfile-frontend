@@ -1,0 +1,14 @@
+FROM golang:1.22.1-bullseye AS builder
+ENV CGO_ENABLED=1
+WORKDIR /
+COPY ./interceptor interceptor
+COPY ./sample/echo-stream/pb sample/echo-stream/pb
+COPY ./sample/echo-stream sample/echo-stream
+WORKDIR /sample/echo-stream
+RUN go build -trimpath -ldflags="-s -w" -o frontend frontend.go
+FROM alpine:latest
+RUN apk add gcompat
+# Copy the built binary from the builder stage
+COPY --from=builder /sample/echo-stream/frontend /frontend
+# Set the entrypoint command to run the binary
+CMD ["/frontend"]
