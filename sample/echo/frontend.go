@@ -9,7 +9,6 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
 
-	interceptor "github.com/appnet-org/golib/interceptor"
 	echo "github.com/appnet-org/golib/sample/echo-pb"
 )
 
@@ -21,8 +20,7 @@ func handler(writer http.ResponseWriter, request *http.Request) {
 	var conn *grpc.ClientConn
 
 	conn, err := grpc.Dial(
-		"server.default.svc.cluster.local:9000",
-		grpc.WithUnaryInterceptor(interceptor.ClientInterceptor("/interceptors/frontend")),
+		":9000",
 		grpc.WithInsecure(),
 	)
 	if err != nil {

@@ -9,7 +9,6 @@ import (
 
 	"golang.org/x/net/context"
 
-	interceptor "github.com/appnet-org/golib/interceptor"
 	echo "github.com/appnet-org/golib/sample/echo-pb"
 	"google.golang.org/grpc"
 )
@@ -41,7 +40,7 @@ func main() {
 		log.Fatalf("failed to listen: %v", err)
 	}
 
-	s := grpc.NewServer(grpc.UnaryInterceptor(interceptor.ServerInterceptor("/interceptors/server")))
+	s := grpc.NewServer()
 	fmt.Printf("Starting server pod at port 9000\n")
 
 	echo.RegisterEchoServiceServer(s, &server{})
