@@ -17,10 +17,12 @@ func handler(writer http.ResponseWriter, request *http.Request) {
 	requestBody := request.URL.Query().Get("key")
 	fmt.Printf("Frontend got request with key: %s\n", requestBody)
 
+	fmt.Printf("Header: %s\n", request.Header)
+
 	var conn *grpc.ClientConn
 
 	conn, err := grpc.Dial(
-		":9000",
+		":8081",
 		grpc.WithInsecure(),
 	)
 	if err != nil {
