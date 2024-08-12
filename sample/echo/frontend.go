@@ -8,6 +8,7 @@ import (
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
+	"google.golang.org/grpc/status"
 
 	echo "github.com/appnet-org/golib/sample/echo-pb"
 )
@@ -36,6 +37,7 @@ func handler(writer http.ResponseWriter, request *http.Request) {
 	md := metadata.New(map[string]string{
 		"key": requestBody, // Here we're setting the custom header "key" to the requestBody
 	})
+
 	ctx := metadata.NewOutgoingContext(context.Background(), md)
 
 	message := echo.Msg{
@@ -47,6 +49,10 @@ func handler(writer http.ResponseWriter, request *http.Request) {
 	if err != nil {
 		fmt.Fprintf(writer, "Echo server returns an error.\n")
 		log.Printf("Error when calling echo: %s", err)
+		// log the detail reason
+		st, _ := status.FromError(err)
+		log.Printf("Error code: %s", st.Code())
+		log.Printf("Error message: %s", st.Message())
 	} else {
 		fmt.Fprintf(writer, "%s", response.Body)
 		log.Printf("Response from server: %s", response.Body)

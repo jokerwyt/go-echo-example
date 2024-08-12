@@ -17,8 +17,10 @@ type server struct {
 	echo.UnimplementedEchoServiceServer
 }
 
+var port string
+
 func (s *server) Echo(ctx context.Context, x *echo.Msg) (*echo.Msg, error) {
-	log.Printf("Server got: [%s]", x.GetBody())
+	log.Printf("PORT[%v] Server got: [%s]", port, x.GetBody())
 
 	// Check if the message contains "sleep"
 	if x.GetBody() == "sleep" {
@@ -26,22 +28,29 @@ func (s *server) Echo(ctx context.Context, x *echo.Msg) (*echo.Msg, error) {
 		time.Sleep(30 * time.Second)
 	}
 
-	hostname, _ := os.Hostname()
-	appendedBody := fmt.Sprintf("You've hit %s\n", hostname)
+	// hostname, _ := os.Hostname()
+	// appendedBody := fmt.Sprintf("You've hit %s\n", hostname)
 	msg := &echo.Msg{
-		Body: appendedBody,
+		Body: x.GetBody(),
 	}
 	return msg, nil
 }
 
 func main() {
-	lis, err := net.Listen("tcp", ":9000")
+	port = os.Getenv("PORT")
+
+	if port == "" {
+		port = "9000"
+	}
+
+	address := fmt.Sprintf(":%s", port)
+	lis, err := net.Listen("tcp", address)
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}
 
 	s := grpc.NewServer()
-	fmt.Printf("Starting server pod at port 9000\n")
+	fmt.Printf("Starting server pod at port %v\n", port)
 
 	echo.RegisterEchoServiceServer(s, &server{})
 	if err := s.Serve(lis); err != nil {
